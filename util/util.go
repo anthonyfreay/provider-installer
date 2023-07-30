@@ -64,6 +64,7 @@ func CreatePluginsDirectory(osType string, tfVersion string, arch string, plugin
 	} else if osType == "windows" {
 		tfdir = "terraform.d"
 		if string(tfVersion) == "1" {
+			// TODO: need to update to use %APP_DATA%
 			pluginDirPath = homeDir + "/" + tfdir + "/plugins/terraform/abf/null/" + pluginVersion + "/" + osType + "_" + arch
 		}
 	}
@@ -78,20 +79,20 @@ func CreatePluginsDirectory(osType string, tfVersion string, arch string, plugin
 
 // Unzip the source artifact and iterate over the contents
 func UnzipSource(source, destination string) error {
-	// Open the zip file
+	log.Print("Open the zip file")
 	reader, err := zip.OpenReader(source)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
 
-	// Get the absolute destination path
+	log.Print("Get the absolute destination path")
 	destination, err = filepath.Abs(destination)
 	if err != nil {
 		return err
 	}
 
-	// Iterate over zip files inside the archive and unzip each of them
+	log.Print("Iterate over zip files inside the archive and unzip each of them")
 	for _, f := range reader.File {
 		err := unzipFile(f, destination)
 		if err != nil {
@@ -104,13 +105,13 @@ func UnzipSource(source, destination string) error {
 
 // Unzip individual files and check for Zip Slip vulnerabilites
 func unzipFile(f *zip.File, destination string) error {
-	// Check if file paths are not vulnerable to Zip Slip
+	log.Print("Check if file paths are not vulnerable to Zip Slip")
 	filePath := filepath.Join(destination, f.Name)
 	if !strings.HasPrefix(filePath, filepath.Clean(destination)+string(os.PathSeparator)) {
 		return fmt.Errorf("invalid file path: %s", filePath)
 	}
 
-	// Create directory tree
+	log.Print("Create directory tree")
 	if f.FileInfo().IsDir() {
 		if err := os.MkdirAll(filePath, os.ModePerm); err != nil {
 			return err
@@ -122,14 +123,14 @@ func unzipFile(f *zip.File, destination string) error {
 		return err
 	}
 
-	// Create a destination file for unzipped content
+	log.Print("Create a destination file for unzipped content")
 	destinationFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 	if err != nil {
 		return err
 	}
 	defer destinationFile.Close()
 
-	// Unzip the content of a file and copy it to the destination file
+	log.Print("Unzip the content of a file and copy it to the destination file")
 	zippedFile, err := f.Open()
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package structs
 
 import "time"
 
+// Parse Hashicorp Provider JSON Response
 type ProviderVersions []struct {
 	Builds []struct {
 		Arch string `json:"arch"`

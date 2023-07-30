@@ -27,9 +27,9 @@ func installProvider(desiredVersion string, osType string, arch string) {
 	var err error
 	var providerVersion string
 
-	log.Println("Place Proper Provider in directory with new name")
-
+	log.Printf("Fetch provider verison: %s", desiredVersion)
 	if desiredVersion == "latest" {
+		log.Printf("Determining the latest verison of provider")
 		resp, err = http.Get("https://api.releases.hashicorp.com/v1/releases/terraform-provider-null")
 		if err != nil {
 			log.Fatal(err)
@@ -50,10 +50,11 @@ func installProvider(desiredVersion string, osType string, arch string) {
 		// GET SPECIFIC VERSION
 	}
 
-	log.Println("Create Proper Terraform Plugins Directory")
+	log.Println("Creating Terraform Plugins Directory")
 	pluginDirPath := util.CreatePluginsDirectory(osType, util.GetLocalTfVersion(), util.GetArch(), providerVersion)
 
 	url := `https://releases.hashicorp.com/terraform-provider-null/` + providerVersion + `/terraform-provider-null_` + providerVersion + `_` + osType + `_` + arch + `.zip`
+	log.Printf("Fetch provider version from: %s", url)
 	resp, err = http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -61,6 +62,8 @@ func installProvider(desiredVersion string, osType string, arch string) {
 
 	executableName := `terraform-provider-null_v` + providerVersion + `.zip`
 	executableFilePath := filepath.Join(pluginDirPath, filepath.Base(executableName))
+
+	log.Printf("Create local verison of executable at: %s", executableFilePath)
 	out, err := os.Create(executableFilePath)
 	os.Chmod(executableFilePath, 0777)
 	if err != nil {
@@ -72,10 +75,12 @@ func installProvider(desiredVersion string, osType string, arch string) {
 	}
 	resp.Body.Close()
 
+	log.Printf("Unzipping executable from: %s, to: %s", executableFilePath, pluginDirPath)
 	err = util.UnzipSource(executableFilePath, pluginDirPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	log.Printf("Remove source zip: %s", executableFilePath)
 	os.Remove(executableFilePath)
 }
