@@ -2,6 +2,7 @@ package util
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -53,20 +54,28 @@ func CreatePluginsDirectory(osType string, tfVersion string, arch string, plugin
 	var err error
 
 	homeDir, err = os.UserHomeDir()
+	if err != nil {
+		return err.Error()
+	}
 	log.Printf("$HOME Directory is: %s", homeDir)
 
-	log.Printf("osType is %s", osType)
-	if osType == "darwin" {
+	if osType == "darwin" || osType == "linux" {
+		log.Printf("Creting plugin directory for osType: %s", osType)
 		tfdir = ".terraform.d"
 		if string(tfVersion) == "1" {
 			pluginDirPath = homeDir + "/" + tfdir + "/plugins/terraform/abf/null/" + pluginVersion + "/" + osType + "_" + arch
 		}
 	} else if osType == "windows" {
+		log.Printf("Creting plugin directory for osType: %s", osType)
 		tfdir = "terraform.d"
 		if string(tfVersion) == "1" {
 			// TODO: need to update to use %APP_DATA%
-			pluginDirPath = homeDir + "/" + tfdir + "/plugins/terraform/abf/null/" + pluginVersion + "/" + osType + "_" + arch
+			pluginDirPath = homeDir + "\\AppData\\Roaming\\" + tfdir + "\\plugins\\terraform\\abf\\null\\" + pluginVersion + "/" + osType + "_" + arch
 		}
+	} else {
+		log.Fatal("This provider installation tool does not support your OS.")
+		err = errors.New("This provider installation tool does not support your OS")
+		return err.Error()
 	}
 	log.Printf("Plugin Directory Path is set to: %s", pluginDirPath)
 	err = os.MkdirAll(pluginDirPath, 0777)

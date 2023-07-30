@@ -28,7 +28,7 @@
     <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
+        <li><a href="#pre-requisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
@@ -37,7 +37,6 @@
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
@@ -49,7 +48,8 @@ I haven't touched naitive golang in a while and was missing it.
 
 I've been heavily interacting with Terraform and different providers, including third-party providers not included in the registry.
 
-This project serves as an exercise to template a tool to easily onboard a new developer to a third-party provider.
+This project serves as an exercise to template a tool to easily onboard a new developer to a third-party provider. This installation tool using the Hasicorp Terraform Null Provider as the example of a third-party provider.
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -68,28 +68,23 @@ To get a local clone up and running, take a look at the following steps...
 
 ### Pre-Requisites
 
+#### golang
 This was built using `go version go1.20.6 darwin/arm64` but should be able to be built using any verison of golang.
 
 Install golang using your preferred package-manager e.g.
-* golang
   ```sh
   brew install go
   ```
 
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
    ```sh
    git clone https://github.com/anthonyfreay/provider-installer.git
    ```
-3. Install NPM packages
+2. Run immediately out-of-box
    ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
+    go run main.go
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -99,9 +94,31 @@ Install golang using your preferred package-manager e.g.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+1. Build the executable of the provider-installer and place it in the target directory.
+````bash
+# location: project root
+go build -o ./target provider-installer
+````
+2. Run `provider-installer`
+````bash
+./target/provider-installer
+````
+3. Make sure provider requirement snipper is defined within your terraform configs
+````terraform
+terraform {
+  required_providers {
+    null = {
+      source = "terraform/abf/null"
+    }
+  }
+}
+````
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+4. Test via Terraform Configuration
+````bash
+# location: terraformTesting
+terraform init
+````
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -110,10 +127,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Feature 1
-- [ ] Feature 2
-- [ ] Feature 3
-    - [ ] Nested Feature
+- [ ] Add support for specific version installation
 
 See the [open issues](https://github.com/anthonyfreay/provider-installer/issues) for a full list of proposed features (and known issues).
 
@@ -156,19 +170,6 @@ Anthony Freay - [@anthonyfreay](https://www.linkedin.com/in/anthonyfreay/) - [an
 Project Link: [https://github.com/anthonyfreay/provider-installer](https://github.com/anthonyfreay/provider-installer)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-* []()
-* []()
-* []()
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
