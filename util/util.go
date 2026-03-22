@@ -46,7 +46,7 @@ func GetLocalTfVersion() string {
 
 // Create the `plugins` directory on local depending on the `terraform version` and the system OS.
 // Returns the path of the plugins directory.
-func CreatePluginsDirectory(osType string, tfVersion string, arch string, pluginVersion string) string {
+func CreatePluginsDirectory(osType string, tfVersion string, arch string, providerSource string, pluginVersion string) string {
 
 	var pluginDirPath string
 	var tfdir string
@@ -60,17 +60,22 @@ func CreatePluginsDirectory(osType string, tfVersion string, arch string, plugin
 	log.Printf("$HOME Directory is: %s", homeDir)
 
 	if osType == "darwin" || osType == "linux" {
-		log.Printf("Creting plugin directory for osType: %s", osType)
+		log.Printf("Creating plugin directory for osType: %s", osType)
 		tfdir = ".terraform.d"
 		if string(tfVersion) == "1" {
-			pluginDirPath = homeDir + "/" + tfdir + "/plugins/terraform/abf/null/" + pluginVersion + "/" + osType + "_" + arch
+			pluginDirPath = filepath.Join(homeDir, tfdir, "plugins", providerSource, pluginVersion, osType+"_"+arch)
 		}
 	} else if osType == "windows" {
-		log.Printf("Creting plugin directory for osType: %s", osType)
+		log.Printf("Creating plugin directory for osType: %s", osType)
+		// For Windows, Terraform looks in %APPDATA%/terraform.d/plugins
+		appData := os.Getenv("APPDATA")
+		if appData == "" {
+			// Fallback if APPDATA is not set
+			appData = filepath.Join(homeDir, "AppData", "Roaming")
+		}
 		tfdir = "terraform.d"
 		if string(tfVersion) == "1" {
-			// TODO: need to update to use %APP_DATA%
-			pluginDirPath = homeDir + "\\AppData\\Roaming\\" + tfdir + "\\plugins\\terraform\\abf\\null\\" + pluginVersion + "/" + osType + "_" + arch
+			pluginDirPath = filepath.Join(appData, tfdir, "plugins", providerSource, pluginVersion, osType+"_"+arch)
 		}
 	} else {
 		log.Fatal("This provider installation tool does not support your OS.")
