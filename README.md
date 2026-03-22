@@ -1,4 +1,4 @@
-<a name="readme-top"></a>
+# provider-installer
 
 <!-- PROJECT SHIELDS -->
 [![Contributors][contributors-shield]][contributors-url]
@@ -7,135 +7,165 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 
-<!-- PROJECT TITLE -->
-<div>
-  <h3 align="center">provider-installer</h3>
-
-  <p align="center">Golang tool to download a Terraform Provider to a local location.</p>
-</div>
-
+Golang tool to download a Terraform Provider to a local location.
 
 <!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#pre-requisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
 
+## Table of Contents
 
+- [About The Project](#about-the-project)
+  - [Features](#features)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
-I haven't touched naitive golang in a while and was missing it. 
+
+I haven't touched native golang in a while and was missing it.
 
 I've been heavily interacting with Terraform and different providers, including third-party providers not included in the registry.
 
-This project serves as an exercise to template a tool to easily onboard a new developer to a third-party provider. This installation tool using the Hasicorp Terraform Null Provider as the example of a third-party provider.
+This project serves as an exercise to template a tool to easily onboard a new developer to a third-party provider. **Note:** In its current state, the tool is hardcoded to install the [HashiCorp Terraform Null Provider](https://registry.terraform.io/providers/hashicorp/null/latest) as a demonstration.
 
+### Features
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+- **Automatic OS/Arch Detection:** Detects `darwin`, `linux`, or `windows` and the system architecture (`amd64`, `arm64`) automatically.
+- **Terraform Version Awareness:** Checks the local Terraform version to determine the correct plugin directory structure (supports Terraform 1.x).
+- **Dynamic Provider Configuration:** Support for custom provider names and source paths via CLI flags.
+- **Automated Installation:** Fetches, downloads, unzips, and places the provider in the local filesystem mirror directory.
 
+[back to top](#provider-installer)
 
 ### Built With
 
-* [![Golang][Golang]][Golang-url]
+- [![Golang][Golang]][Golang-url]
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+[back to top](#provider-installer)
 
 <!-- GETTING STARTED -->
+
 ## Getting Started
 
 To get a local clone up and running, take a look at the following steps...
 
-### Pre-Requisites
+### Prerequisites
 
-#### golang
-This was built using `go version go1.20.6 darwin/arm64` but should be able to be built using any verison of golang.
+#### Golang
+
+This was built using `go version go1.20.6 darwin/arm64` but should be able to be built using any version of golang.
 
 Install golang using your preferred package-manager e.g.
-  ```sh
-  brew install go
-  ```
+
+```sh
+brew install go
+```
+
+#### Terraform
+
+The tool requires `terraform` to be installed and available in your PATH to determine the correct plugin directory structure.
+
+```sh
+brew install terraform
+```
 
 ### Installation
 
 1. Clone the repo
+
    ```sh
    git clone https://github.com/anthonyfreay/provider-installer.git
    ```
+
 2. Run immediately out-of-box
+
    ```sh
-    go run main.go
+   go run main.go
    ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[back to top](#provider-installer)
 
 <!-- USAGE EXAMPLES -->
+
 ## Usage
 
 1. Build the executable of the provider-installer and place it in the target directory.
-````bash
-# location: project root
-go build -o ./target provider-installer
-````
+
+   ```bash
+   # location: project root
+   go build -o ./target provider-installer
+   ```
+
 2. Run `provider-installer`
-````bash
-./target/provider-installer
-````
-3. Make sure provider requirement snipper is defined within your terraform configs
-````terraform
-terraform {
-  required_providers {
-    null = {
-      source = "terraform/abf/null"
-    }
-  }
-}
-````
 
-4. Test via Terraform Configuration
-````bash
-# location: terraformTesting
-terraform init
-````
+   ```bash
+   # Install the latest version (defaults to null provider)
+   ./target/provider-installer
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+   # Install a specific version
+   ./target/provider-installer -version 3.2.1
 
+   # Install a custom provider
+   ./target/provider-installer -name my-provider -source my-org/my-provider -version 1.0.0
+   ```
 
+3. Make sure provider requirement snippet is defined within your terraform configs
+
+   ```terraform
+   terraform {
+     required_providers {
+       my-provider = {
+         source = "my-org/my-provider"
+       }
+     }
+   }
+   ```
+
+4. How it works
+
+   The tool performs the following steps:
+
+   - Detects the local OS and Architecture using `runtime.GOOS` and `runtime.GOARCH`.
+   - Runs `terraform version` to determine the major version of Terraform installed.
+   - Fetches the version metadata (defaults to `null` provider from Hashicorp's release API if `latest` is requested).
+   - Creates the local plugin directory using the standard filesystem mirror layout:
+     - Linux/Darwin: `~/.terraform.d/plugins/SOURCE/VERSION/OS_ARCH`
+     - Windows: `%APPDATA%\terraform.d\plugins\SOURCE\VERSION\OS_ARCH`
+   - Downloads and unzips the provider binary into that directory.
+
+   > [!NOTE]
+   > While the name and source are dynamic, the download URL is currently optimized for HashiCorp-style release mirrors (e.g., `releases.hashicorp.com`).
+
+5. Test via Terraform Configuration
+
+   ```bash
+   # location: terraformTesting
+   terraform init
+   ```
+
+[back to top](#provider-installer)
 
 <!-- ROADMAP -->
+
 ## Roadmap
 
-- [ ] Add support for specific version installation
+- [x] Add support for specific version installation
+- [x] Support for dynamic provider name/source via CLI flags
+- [ ] Support for custom release API endpoints (non-HashiCorp)
 
 See the [open issues](https://github.com/anthonyfreay/provider-installer/issues) for a full list of proposed features (and known issues).
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[back to top](#provider-installer)
 
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -149,30 +179,28 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[back to top](#provider-installer)
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
+[back to top](#provider-installer)
 
 <!-- CONTACT -->
+
 ## Contact
 
 Anthony Freay - [@anthonyfreay](https://www.linkedin.com/in/anthonyfreay/) - [anthonyfreay.com](https://anthonyfreay.com)
 
 Project Link: [https://github.com/anthonyfreay/provider-installer](https://github.com/anthonyfreay/provider-installer)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+[back to top](#provider-installer)
 
 <!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/anthonyfreay/provider-installer
 [contributors-url]: https://github.com/anthonyfreay/provider-installer/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/anthonyfreay/provider-installer
@@ -183,6 +211,5 @@ Project Link: [https://github.com/anthonyfreay/provider-installer](https://githu
 [issues-url]: https://github.com/anthonyfreay/provider-installer/issues
 [license-shield]: https://img.shields.io/github/license/anthonyfreay/provider-installer
 [license-url]: https://github.com/anthonyfreay/provider-installer/blob/master/LICENSE.txt
-[linkedin-url]: https://linkedin.com/in/anthonyfreay
 [Golang]: https://img.shields.io/badge/golang-000000&logo=nextdotjs&logoColor=white
 [Golang-url]: https://go.dev/
